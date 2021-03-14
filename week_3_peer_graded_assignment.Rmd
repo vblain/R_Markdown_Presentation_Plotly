@@ -1,0 +1,103 @@
+---
+title: "Week 3 Peer-graded Assignment"
+author: "Vincent Blain"
+date: "3/13/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Developing Data Products - Week 3 Peer-graded Assignment
+
+Create a web page presentation using R Markdown that features a plot created with Plotly. Host your webpage on either GitHub Pages, RPubs, or NeoCities. Your webpage must contain the date that you created the document, and it must contain a plot created with Plotly. We would love to see you show off your creativity! 
+
+```{r}
+library(plotly)
+```
+
+### 3D Surface using Plotly and built in mtcars dataset
+
+```{r}
+# mtcars matrix
+data <- as.matrix(mtcars)
+
+plot_ly(x=colnames(data), y=rownames(data), z = data, type = "surface") %>% layout(margin = list(l=120))
+```
+
+### 3D Surface using Plotly and built in mtcars dataset
+
+Add Package "Tigris" to be able to get US State/County FIPS
+
+```{r}
+library(tigris)
+library(dplyr)
+```
+
+Load midwest dataset
+```{r}
+mh <- midwest
+```
+
+Load FIPS data, remove the string " County" from the county column
+
+```{r}
+fips <- fips_codes
+fips <- data.frame(lapply(fips, function(x) { gsub(" COUNTY", "", toupper(x)) }))
+```
+
+Using DPLYR join the Midwest Dataset to Fips to create a dataset that contains the full FIPS code to make easier to generate a map based on FIPS. Use Stringr to remove all white space from the FullFips column to prevent errors.
+
+```{r}
+library(dplyr)
+library(stringr)
+
+mhfips <- mh %>% inner_join(fips, by = c("state" = "state", "county" = "county"))
+mhfips$fullfips <- as.character(str_replace_all(paste(mhfips$state_code, mhfips$county_code), regex("\\s*"), ""))
+```
+
+```{r}
+library(rjson)
+
+url <- 'https://raw.githubusercontent.com/plotly/datasets/master/geojson-counties-fips.json'
+counties <- rjson::fromJSON(file=url)
+
+mhfips$hover <- with(mhfips, paste(state, '<br>', 
+                           county, '<br>', 
+                           "white", popwhite, 
+                           "black", popblack
+                           ))
+
+# give state boundaries a white border
+l <- list(color = toRGB("white"), width = 2)
+
+# specify some map projection/options
+g <- list(
+  scope = 'usa',
+  projection = list(type = 'albers usa'),
+  showlakes = TRUE,
+  lakecolor = toRGB('white')
+)
+
+#fig <- plot_geo(mhfips, locationmode = 'USA-states')
+fig <- plot_ly()
+fig <- fig %>% add_trace(
+    type="choropleth",
+    z = mhfips$poptotal, 
+    geojson=counties,
+    text = mhfips$hover, 
+    locations = mhfips$fullfips,
+    colorscale="Viridis",
+    marker=list(line=list(
+      width=0)
+    )
+  )
+fig <- fig %>% colorbar(title = "Population per county")
+fig <- fig %>% layout(
+    title = 'Midwest US State Dataset<br>(Hover for breakdown)',
+    geo = g
+  )
+
+fig
+```
