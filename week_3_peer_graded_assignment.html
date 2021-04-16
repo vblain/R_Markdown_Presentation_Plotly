@@ -853,18 +853,17 @@ fips &lt;- data.frame(lapply(fips, function(x) { gsub(&quot; COUNTY&quot;, &quot
 library(stringr)
 
 mhfips &lt;- mh %&gt;% inner_join(fips, by = c(&quot;state&quot; = &quot;state&quot;, &quot;county&quot; = &quot;county&quot;))
-mhfips$fullfips &lt;- as.character(str_replace_all(paste(mhfips$state_code, mhfips$county_code), regex(&quot;\\s*&quot;), &quot;&quot;))
+
+mhfips$fullfips &lt;- as.character(
+  str_replace_all(
+    paste(mhfips$state_code, mhfips$county_code), 
+    regex(&quot;\\s*&quot;), &quot;&quot;))
 
 library(rjson)
 
 url &lt;- &#39;https://raw.githubusercontent.com/plotly/datasets/master/geojson-counties-fips.json&#39;
-counties &lt;- rjson::fromJSON(file=url)
 
-mhfips$hover &lt;- with(mhfips, paste(state, &#39;&lt;br&gt;&#39;, 
-                           county, &#39;&lt;br&gt;&#39;, 
-                           &quot;white&quot;, popwhite, 
-                           &quot;black&quot;, popblack
-                           ))
+counties &lt;- rjson::fromJSON(file=url)
 </code></pre>
 
 </div>
@@ -873,10 +872,23 @@ mhfips$hover &lt;- with(mhfips, paste(state, &#39;&lt;br&gt;&#39;,
 <section data-transition="linear" data-transition-speed="default">
 <h3>Setup data for user interaction - 3</h3>
 <div class="slideContent" >
-<pre><code class="r"># give state boundaries a white border
-l &lt;- list(color = toRGB(&quot;white&quot;), width = 2)
+<pre><code class="r">mhfips$hover &lt;- with(mhfips, paste(state, &#39;&lt;br&gt;&#39;, 
+                           county, &#39;&lt;br&gt;&#39;, 
+                           &quot;white&quot;, popwhite, 
+                           &quot;black&quot;, popblack
+                           ))
 
-# specify some map projection/options
+# give state boundaries a white border
+l &lt;- list(color = toRGB(&quot;white&quot;), width = 2)
+</code></pre>
+
+</div>
+
+</section>
+<section data-transition="linear" data-transition-speed="default">
+<h3>Setup data for user interaction - 4</h3>
+<div class="slideContent" >
+<pre><code class="r"># specify some map projection/options
 g &lt;- list(
   scope = &#39;usa&#39;,
   projection = list(type = &#39;albers usa&#39;),
@@ -891,7 +903,7 @@ fig &lt;- plot_ly()
 
 </section>
 <section data-transition="linear" data-transition-speed="default">
-<h3>Setup data for user interaction - 4</h3>
+<h3>Setup data for user interaction - 5</h3>
 <div class="slideContent" >
 <pre><code class="r">fig &lt;- fig %&gt;% add_trace(type=&quot;choropleth&quot;, z = mhfips$poptotal, 
     geojson=counties, text = mhfips$hover, locations = mhfips$fullfips,

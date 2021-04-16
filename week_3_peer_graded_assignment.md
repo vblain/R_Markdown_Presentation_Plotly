@@ -80,18 +80,17 @@ library(dplyr)
 library(stringr)
 
 mhfips <- mh %>% inner_join(fips, by = c("state" = "state", "county" = "county"))
-mhfips$fullfips <- as.character(str_replace_all(paste(mhfips$state_code, mhfips$county_code), regex("\\s*"), ""))
+
+mhfips$fullfips <- as.character(
+  str_replace_all(
+    paste(mhfips$state_code, mhfips$county_code), 
+    regex("\\s*"), ""))
 
 library(rjson)
 
 url <- 'https://raw.githubusercontent.com/plotly/datasets/master/geojson-counties-fips.json'
-counties <- rjson::fromJSON(file=url)
 
-mhfips$hover <- with(mhfips, paste(state, '<br>', 
-                           county, '<br>', 
-                           "white", popwhite, 
-                           "black", popblack
-                           ))
+counties <- rjson::fromJSON(file=url)
 ```
 
 Setup data for user interaction - 3
@@ -99,9 +98,21 @@ Setup data for user interaction - 3
 
 
 ```r
+mhfips$hover <- with(mhfips, paste(state, '<br>', 
+                           county, '<br>', 
+                           "white", popwhite, 
+                           "black", popblack
+                           ))
+
 # give state boundaries a white border
 l <- list(color = toRGB("white"), width = 2)
+```
 
+Setup data for user interaction - 4
+========================================================
+
+
+```r
 # specify some map projection/options
 g <- list(
   scope = 'usa',
@@ -113,7 +124,7 @@ g <- list(
 fig <- plot_ly()
 ```
 
-Setup data for user interaction - 4
+Setup data for user interaction - 5
 ========================================================
 
 
